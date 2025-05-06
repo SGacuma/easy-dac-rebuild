@@ -7,9 +7,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
   pageTitle: string;
+  children?: React.ReactNode; // Add the children prop
 }
 
-const Layout: React.FC<LayoutProps> = ({ pageTitle }) => {
+const Layout: React.FC<LayoutProps> = ({ pageTitle, children }) => {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
 
@@ -25,7 +26,7 @@ const Layout: React.FC<LayoutProps> = ({ pageTitle }) => {
         <Header toggleSidebar={toggleSidebar} pageTitle={pageTitle} />
         
         <main className={`flex-1 overflow-y-auto p-6 transition-all ${isSidebarOpen ? (isMobile ? 'ml-0' : 'ml-64') : 'ml-0'}`}>
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
     </div>

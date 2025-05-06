@@ -1,143 +1,235 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from "@/components/ui/chart";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 
 const Dashboard: React.FC = () => {
-  // Mock data
-  const financialSummary = {
-    revenue: 125000,
-    expenses: 78500,
-    profit: 46500,
-    accountsReceivable: 35000,
-    accountsPayable: 22000,
-    cashFlow: 15000,
-    budgetUsage: 65,
-  };
+  // Sample data for dashboard metrics
+  const metrics = [
+    { title: "Revenue", value: "$125,430", change: "+12.5%", trend: "up" },
+    { title: "Expenses", value: "$54,210", change: "-3.2%", trend: "down" },
+    { title: "Profit", value: "$71,220", change: "+18.7%", trend: "up" },
+    { title: "Outstanding", value: "$28,150", change: "+2.4%", trend: "up" },
+  ];
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  // Sample data for revenue chart
+  const revenueData = [
+    { month: 'Jan', revenue: 4000, expenses: 2400 },
+    { month: 'Feb', revenue: 5000, expenses: 2800 },
+    { month: 'Mar', revenue: 6000, expenses: 3200 },
+    { month: 'Apr', revenue: 7000, expenses: 3600 },
+    { month: 'May', revenue: 8000, expenses: 4000 },
+    { month: 'Jun', revenue: 9000, expenses: 4500 },
+  ];
+
+  // Sample data for expense distribution
+  const expenseDistribution = [
+    { name: 'Operations', value: 35 },
+    { name: 'Marketing', value: 25 },
+    { name: 'R&D', value: 20 },
+    { name: 'Admin', value: 15 },
+    { name: 'Other', value: 5 },
+  ];
+
+  // Colors for pie chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {metrics.map((metric, index) => (
+          <Card key={index}>
+            <CardContent className="p-4">
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm text-dac-muted">{metric.title}</p>
+                <div className="flex justify-between items-baseline">
+                  <h3 className="text-2xl font-bold">{metric.value}</h3>
+                  <span className={`text-sm ${metric.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>{metric.change}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Revenue vs Expenses Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue vs Expenses</CardTitle>
+          <CardDescription>Monthly comparison for the current period</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                width={500}
+                height={300}
+                data={revenueData}
+                margin={{
+                  top: 5, right: 30, left: 20, bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
+                <Bar dataKey="expenses" name="Expenses" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Budget Status */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-dac-muted">Revenue</CardTitle>
+          <CardHeader>
+            <CardTitle>Budget Status</CardTitle>
+            <CardDescription>Current fiscal year budget utilization</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-dac-foreground">
-              {formatCurrency(financialSummary.revenue)}
+            <div className="space-y-6">
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm font-medium">Operations</span>
+                  <span className="text-sm font-medium">75%</span>
+                </div>
+                <Progress value={75} className="h-2 bg-gray-100" />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm font-medium">Marketing</span>
+                  <span className="text-sm font-medium">62%</span>
+                </div>
+                <Progress value={62} className="h-2 bg-gray-100" />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm font-medium">Research & Development</span>
+                  <span className="text-sm font-medium">89%</span>
+                </div>
+                <Progress value={89} className="h-2 bg-gray-100" />
+              </div>
             </div>
-            <p className="text-xs text-green-500 mt-1">+12.5% from last month</p>
           </CardContent>
         </Card>
-        
+
+        {/* Expense Distribution */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-dac-muted">Expenses</CardTitle>
+          <CardHeader>
+            <CardTitle>Expense Distribution</CardTitle>
+            <CardDescription>Breakdown of expenses by category</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-dac-foreground">
-              {formatCurrency(financialSummary.expenses)}
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expenseDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {expenseDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <p className="text-xs text-red-500 mt-1">+5.8% from last month</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-dac-muted">Net Profit</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dac-foreground">
-              {formatCurrency(financialSummary.profit)}
-            </div>
-            <p className="text-xs text-green-500 mt-1">+8.2% from last month</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-dac-muted">Cash Flow</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dac-foreground">
-              {formatCurrency(financialSummary.cashFlow)}
-            </div>
-            <p className="text-xs text-green-500 mt-1">+3.1% from last month</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Accounts Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">Accounts Receivable</span>
-                  <span className="text-sm font-medium">{formatCurrency(financialSummary.accountsReceivable)}</span>
-                </div>
-                <Progress value={70} className="h-2 bg-dac-border" indicatorColor="bg-dac-accent" />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">Accounts Payable</span>
-                  <span className="text-sm font-medium">{formatCurrency(financialSummary.accountsPayable)}</span>
-                </div>
-                <Progress value={45} className="h-2 bg-dac-border" indicatorColor="bg-red-400" />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">Budget Usage</span>
-                  <span className="text-sm font-medium">{financialSummary.budgetUsage}%</span>
-                </div>
-                <Progress value={financialSummary.budgetUsage} className="h-2 bg-dac-border" indicatorColor="bg-dac-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { id: 1, date: '2025-05-05', description: 'Office Supplies', category: 'Expenses', amount: -1250 },
-                { id: 2, date: '2025-05-04', description: 'Client Payment - ABC Corp', category: 'Revenue', amount: 7500 },
-                { id: 3, date: '2025-05-03', description: 'Utility Bill', category: 'Expenses', amount: -350 },
-                { id: 4, date: '2025-05-02', description: 'Consulting Services', category: 'Revenue', amount: 3200 },
-                { id: 5, date: '2025-05-01', description: 'Software Subscription', category: 'Expenses', amount: -99 }
-              ].map(transaction => (
-                <div key={transaction.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{transaction.description}</p>
-                    <p className="text-xs text-dac-muted">{transaction.date} • {transaction.category}</p>
-                  </div>
-                  <span className={`text-sm font-medium ${transaction.amount >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {formatCurrency(transaction.amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Recent Transactions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+          <CardDescription>Last 5 transactions entered into the system</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-dac-border text-left">
+                <th className="pb-2 font-medium">Date</th>
+                <th className="pb-2 font-medium">Description</th>
+                <th className="pb-2 font-medium">Account</th>
+                <th className="pb-2 font-medium text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-dac-border">
+                <td className="py-3 text-sm">2025-05-06</td>
+                <td className="py-3 text-sm">Client Payment - XYZ Inc</td>
+                <td className="py-3 text-sm">Accounts Receivable</td>
+                <td className="py-3 text-sm text-right">$4,500</td>
+              </tr>
+              <tr className="border-b border-dac-border">
+                <td className="py-3 text-sm">2025-05-05</td>
+                <td className="py-3 text-sm">Office Supplies</td>
+                <td className="py-3 text-sm">Expenses</td>
+                <td className="py-3 text-sm text-right text-red-500">-$350</td>
+              </tr>
+              <tr className="border-b border-dac-border">
+                <td className="py-3 text-sm">2025-05-03</td>
+                <td className="py-3 text-sm">Client Invoice - ABC Corp</td>
+                <td className="py-3 text-sm">Sales Revenue</td>
+                <td className="py-3 text-sm text-right">$7,200</td>
+              </tr>
+              <tr className="border-b border-dac-border">
+                <td className="py-3 text-sm">2025-05-02</td>
+                <td className="py-3 text-sm">Rent Payment</td>
+                <td className="py-3 text-sm">Rent Expense</td>
+                <td className="py-3 text-sm text-right text-red-500">-$2,000</td>
+              </tr>
+              <tr>
+                <td className="py-3 text-sm">2025-05-01</td>
+                <td className="py-3 text-sm">Utilities</td>
+                <td className="py-3 text-sm">Utilities Expense</td>
+                <td className="py-3 text-sm text-right text-red-500">-$450</td>
+              </tr>
+            </tbody>
+          </table>
+        </CardContent>
+        <CardFooter>
+          <a href="/transactions" className="text-sm text-dac-primary hover:underline">View all transactions</a>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
