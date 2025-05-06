@@ -1,19 +1,11 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
+import { BadgePlus } from 'lucide-react';
 import NewAccountForm from '@/components/accounts/NewAccountForm';
-import { FileChart } from 'lucide-react';
 
 const ChartOfAccounts: React.FC = () => {
   const { toast } = useToast();
@@ -73,7 +65,7 @@ const ChartOfAccounts: React.FC = () => {
           className="bg-dac-primary hover:bg-dac-secondary"
           onClick={() => setIsNewAccountDialogOpen(true)}
         >
-          <FileChart className="h-4 w-4 mr-2" /> Add New Account
+          <BadgePlus className="h-4 w-4 mr-2" /> Add New Account
         </Button>
       </div>
 

@@ -55,7 +55,10 @@ const NewAccountForm: React.FC<NewAccountFormProps> = ({
   });
 
   const handleSubmit = (data: AccountFormValues) => {
-    onSubmit(data);
+    onSubmit({
+      ...data,
+      balance: parseFloat(data.balance.toString()) || 0 // Ensure balance is a number
+    });
     form.reset();
   };
 

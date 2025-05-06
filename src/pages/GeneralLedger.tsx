@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import NewJournalEntryForm from '@/components/journal/NewJournalEntryForm';
-import { Journal } from 'lucide-react';
+import { BookOpen } from 'lucide-react'; // Using BookOpen instead of Journal
 
 const GeneralLedger: React.FC = () => {
   const { toast } = useToast();
@@ -117,7 +117,7 @@ const GeneralLedger: React.FC = () => {
           className="bg-dac-primary hover:bg-dac-secondary"
           onClick={() => setIsJournalEntryDialogOpen(true)}
         >
-          <Journal className="h-4 w-4 mr-2" /> New Journal Entry
+          <BookOpen className="h-4 w-4 mr-2" /> New Journal Entry
         </Button>
       </div>
 

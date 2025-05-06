@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { X, Plus } from 'lucide-react';
 
-// Schema for the form
+// Schema for the form with proper types
 const journalEntrySchema = z.object({
   date: z.string().min(1, 'Date is required'),
   reference: z.string().min(1, 'Reference number is required'),
@@ -32,15 +32,15 @@ const journalEntrySchema = z.object({
   lines: z.array(z.object({
     account: z.string().min(1, 'Account is required'),
     description: z.string().optional(),
-    debit: z.string().transform(val => parseFloat(val) || 0),
-    credit: z.string().transform(val => parseFloat(val) || 0)
+    debit: z.string().optional(),
+    credit: z.string().optional()
   })).refine(lines => 
     lines.length >= 2, {
       message: 'At least two lines are required'
     }
   ).refine(lines => {
-    const totalDebit = lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
-    const totalCredit = lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+    const totalDebit = lines.reduce((sum, line) => sum + (line.debit ? parseFloat(line.debit) : 0), 0);
+    const totalCredit = lines.reduce((sum, line) => sum + (line.credit ? parseFloat(line.credit) : 0), 0);
     return Math.abs(totalDebit - totalCredit) < 0.001; // Accounting for floating point precision
   }, {
     message: 'Total debits must equal total credits'
@@ -83,13 +83,17 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
     }
   });
   
-  const { fields, append, remove } = form.watch('lines');
+  // Use useFieldArray to handle dynamic form arrays
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "lines"
+  });
   
   // Calculate totals
   const calculateTotals = () => {
     const lines = form.getValues('lines');
-    const totalDebit = lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
-    const totalCredit = lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+    const totalDebit = lines.reduce((sum, line) => sum + (line.debit ? parseFloat(line.debit) : 0), 0);
+    const totalCredit = lines.reduce((sum, line) => sum + (line.credit ? parseFloat(line.credit) : 0), 0);
     return { totalDebit, totalCredit };
   };
   
@@ -97,15 +101,13 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
 
   // Add a new journal line
   const addLine = () => {
-    const lines = form.getValues('lines');
-    form.setValue('lines', [...lines, { account: '', description: '', debit: '', credit: '' }]);
+    append({ account: '', description: '', debit: '', credit: '' });
   };
   
   // Remove a journal line
   const removeLine = (index: number) => {
-    const lines = form.getValues('lines');
-    if (lines.length > 2) {
-      form.setValue('lines', lines.filter((_, i) => i !== index));
+    if (fields.length > 2) {
+      remove(index);
     }
   };
 
@@ -177,8 +179,8 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
                 <div className="col-span-2 font-medium text-sm">Action</div>
               </div>
 
-              {form.getValues('lines').map((line, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 items-center">
+              {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-12 gap-2 items-center">
                   <div className="col-span-3">
                     <FormField
                       control={form.control}
@@ -261,7 +263,7 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => removeLine(index)}
-                      disabled={form.getValues('lines').length <= 2}
+                      disabled={fields.length <= 2}
                     >
                       <X className="h-4 w-4" />
                       <span className="sr-only">Remove</span>
