@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -26,7 +25,7 @@ const accountFormSchema = z.object({
   code: z.string().min(3, 'Account code must be at least 3 characters'),
   name: z.string().min(2, 'Account name is required'),
   type: z.string().min(1, 'Account type is required'),
-  balance: z.string().transform(val => parseFloat(val) || 0),
+  balance: z.coerce.number().default(0),
   active: z.boolean().default(true)
 });
 
@@ -49,16 +48,13 @@ const NewAccountForm: React.FC<NewAccountFormProps> = ({
       code: '',
       name: '',
       type: '',
-      balance: '0',
+      balance: 0,
       active: true
     }
   });
 
   const handleSubmit = (data: AccountFormValues) => {
-    onSubmit({
-      ...data,
-      balance: parseFloat(data.balance.toString()) || 0 // Ensure balance is a number
-    });
+    onSubmit(data);
     form.reset();
   };
 

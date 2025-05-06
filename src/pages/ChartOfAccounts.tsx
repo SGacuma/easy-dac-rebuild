@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { BadgePlus } from 'lucide-react';
 import NewAccountForm from '@/components/accounts/NewAccountForm';
+import { 
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption
+} from '@/components/ui/table';
 
 const ChartOfAccounts: React.FC = () => {
   const { toast } = useToast();
@@ -43,7 +54,7 @@ const ChartOfAccounts: React.FC = () => {
       code: data.code,
       name: data.name,
       type: data.type,
-      balance: parseFloat(data.balance),
+      balance: data.balance,
       active: data.active
     };
     

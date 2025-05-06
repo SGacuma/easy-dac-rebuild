@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,9 +28,7 @@ const transactionSchema = z.object({
   type: z.string().min(1, 'Transaction type is required'),
   reference: z.string().min(1, 'Reference number is required'),
   customer: z.string().min(1, 'Customer/Vendor name is required'),
-  amount: z.string().transform(val => parseFloat(val) || 0).refine(val => val > 0, {
-    message: 'Amount must be greater than zero',
-  }),
+  amount: z.coerce.number().positive('Amount must be greater than zero'),
   description: z.string().optional(),
   status: z.string().default('Pending'),
 });
@@ -56,7 +53,7 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
       type: '',
       reference: '',
       customer: '',
-      amount: '',
+      amount: 0,
       description: '',
       status: 'Pending'
     }
