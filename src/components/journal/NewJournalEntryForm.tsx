@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Plus } from 'lucide-react';
+import { proformaEntries, generateJournalLinesFromProforma } from '@/utils/proformaEntries';
 
 // Schema for the form with proper types
 const journalEntrySchema = z.object({
@@ -57,6 +58,7 @@ const accountOptions = [
   { label: "Sales Revenue", value: "Sales Revenue" },
   { label: "Office Supplies", value: "Office Supplies" },
   { label: "Rent Expense", value: "Rent Expense" },
+  { label: "Salary Expense", value: "Salary Expense" },
 ];
 
 interface NewJournalEntryFormProps {
@@ -70,6 +72,9 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
   onOpenChange,
   onSubmit
 }) => {
+  const [selectedProforma, setSelectedProforma] = useState('');
+  const [transactionAmount, setTransactionAmount] = useState('');
+  
   const form = useForm<JournalEntryValues>({
     resolver: zodResolver(journalEntrySchema),
     defaultValues: {
@@ -84,7 +89,7 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
   });
   
   // Use useFieldArray to handle dynamic form arrays
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: "lines"
   });
@@ -111,9 +116,32 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
     }
   };
 
+  // Apply proforma template
+  const applyProforma = () => {
+    if (!selectedProforma || !transactionAmount || isNaN(parseFloat(transactionAmount))) {
+      return;
+    }
+
+    const amount = parseFloat(transactionAmount);
+    const selectedTemplate = proformaEntries.find(entry => entry.id === selectedProforma);
+    
+    if (!selectedTemplate) return;
+    
+    // Update description based on template
+    form.setValue('description', selectedTemplate.description);
+    
+    // Generate journal lines based on the template and amount
+    const generatedLines = generateJournalLinesFromProforma(selectedProforma, amount);
+    
+    // Replace the current lines with the generated ones
+    replace(generatedLines);
+  };
+
   const handleSubmit = (data: JournalEntryValues) => {
     onSubmit(data);
     form.reset();
+    setSelectedProforma('');
+    setTransactionAmount('');
   };
 
   return (
@@ -152,6 +180,53 @@ const NewJournalEntryForm: React.FC<NewJournalEntryFormProps> = ({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Proforma Selection Section */}
+            <div className="bg-slate-50 p-3 rounded-md border border-slate-200">
+              <h3 className="text-sm font-medium mb-2">Use Proforma Template</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Transaction Type</label>
+                  <Select
+                    value={selectedProforma}
+                    onValueChange={setSelectedProforma}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {proformaEntries.map(entry => (
+                        <SelectItem key={entry.id} value={entry.id}>
+                          {entry.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Amount</label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    placeholder="Enter amount" 
+                    value={transactionAmount} 
+                    onChange={(e) => setTransactionAmount(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-end">
+                  <Button 
+                    type="button" 
+                    onClick={applyProforma}
+                    disabled={!selectedProforma || !transactionAmount || isNaN(parseFloat(transactionAmount))}
+                    className="w-full"
+                  >
+                    Apply Template
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <FormField
