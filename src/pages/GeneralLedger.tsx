@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
 import { 
   Select,
   SelectContent,
@@ -10,10 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import NewJournalEntryForm from '@/components/journal/NewJournalEntryForm';
+import { Journal } from 'lucide-react';
 
 const GeneralLedger: React.FC = () => {
+  const { toast } = useToast();
+  const [isJournalEntryDialogOpen, setIsJournalEntryDialogOpen] = useState(false);
+  
   // Mock data
-  const ledgerEntries = [
+  const [ledgerEntries, setLedgerEntries] = useState([
     { 
       id: 1, 
       date: '2025-05-01', 
@@ -68,7 +74,7 @@ const GeneralLedger: React.FC = () => {
       debit: 0, 
       credit: 7500 
     },
-  ];
+  ]);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -78,13 +84,40 @@ const GeneralLedger: React.FC = () => {
       minimumFractionDigits: 2,
     }).format(amount);
   };
+  
+  const handleJournalEntrySubmit = (data: any) => {
+    let nextId = ledgerEntries.length + 1;
+    const newEntries = data.lines.map((line: any) => {
+      return {
+        id: nextId++,
+        date: data.date,
+        reference: data.reference,
+        account: line.account,
+        description: data.description,
+        debit: line.debit ? parseFloat(line.debit) : 0,
+        credit: line.credit ? parseFloat(line.credit) : 0
+      };
+    });
+    
+    setLedgerEntries([...newEntries, ...ledgerEntries]);
+    setIsJournalEntryDialogOpen(false);
+    
+    toast({
+      title: "Journal Entry Created",
+      description: `Journal entry ${data.reference} has been added to the general ledger.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-dac-foreground">General Ledger</h2>
-        <Button variant="default" className="bg-dac-primary hover:bg-dac-secondary">
-          New Journal Entry
+        <Button 
+          variant="default" 
+          className="bg-dac-primary hover:bg-dac-secondary"
+          onClick={() => setIsJournalEntryDialogOpen(true)}
+        >
+          <Journal className="h-4 w-4 mr-2" /> New Journal Entry
         </Button>
       </div>
 
@@ -173,6 +206,12 @@ const GeneralLedger: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <NewJournalEntryForm 
+        open={isJournalEntryDialogOpen}
+        onOpenChange={setIsJournalEntryDialogOpen}
+        onSubmit={handleJournalEntrySubmit}
+      />
     </div>
   );
 };

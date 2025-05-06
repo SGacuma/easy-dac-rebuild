@@ -1,7 +1,9 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
 import { 
   Select,
   SelectContent,
@@ -10,10 +12,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import NewTransactionForm from '@/components/transactions/NewTransactionForm';
+import { FilePlus } from 'lucide-react';
 
 const Transactions: React.FC = () => {
+  const { toast } = useToast();
+  const [isNewTransactionDialogOpen, setIsNewTransactionDialogOpen] = useState(false);
+  
   // Mock data
-  const transactions = [
+  const [transactions, setTransactions] = useState([
     { 
       id: 1, 
       date: '2025-05-05', 
@@ -68,7 +75,7 @@ const Transactions: React.FC = () => {
       status: 'Completed', 
       amount: 4200 
     },
-  ];
+  ]);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -92,6 +99,26 @@ const Transactions: React.FC = () => {
         return 'bg-gray-100 text-gray-600';
     }
   };
+  
+  const handleNewTransactionSubmit = (data: any) => {
+    const newTransaction = {
+      id: transactions.length + 1,
+      date: data.date,
+      type: data.type,
+      reference: data.reference,
+      customer: data.customer,
+      status: data.status,
+      amount: data.type === 'Expense' ? -parseFloat(data.amount) : parseFloat(data.amount)
+    };
+    
+    setTransactions([newTransaction, ...transactions]);
+    setIsNewTransactionDialogOpen(false);
+    
+    toast({
+      title: "Transaction Created",
+      description: `${data.type} ${data.reference} has been created successfully.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -99,7 +126,13 @@ const Transactions: React.FC = () => {
         <h2 className="text-2xl font-bold text-dac-foreground">Transactions</h2>
         <div className="flex space-x-2">
           <Button variant="outline">Import Transactions</Button>
-          <Button variant="default" className="bg-dac-primary hover:bg-dac-secondary">New Transaction</Button>
+          <Button 
+            variant="default" 
+            className="bg-dac-primary hover:bg-dac-secondary"
+            onClick={() => setIsNewTransactionDialogOpen(true)}
+          >
+            <FilePlus className="h-4 w-4 mr-2" /> New Transaction
+          </Button>
         </div>
       </div>
 
@@ -215,7 +248,7 @@ const Transactions: React.FC = () => {
           </table>
           <div className="flex items-center justify-between border-t border-dac-border px-4 py-2 bg-dac-background">
             <div className="text-sm text-dac-muted">
-              Showing <strong>6</strong> of <strong>24</strong> transactions
+              Showing <strong>{transactions.length}</strong> of <strong>24</strong> transactions
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" disabled>Previous</Button>
@@ -224,6 +257,12 @@ const Transactions: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <NewTransactionForm 
+        open={isNewTransactionDialogOpen}
+        onOpenChange={setIsNewTransactionDialogOpen}
+        onSubmit={handleNewTransactionSubmit}
+      />
     </div>
   );
 };

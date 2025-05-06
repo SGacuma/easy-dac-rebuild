@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,10 +11,16 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+import NewAccountForm from '@/components/accounts/NewAccountForm';
+import { FileChart } from 'lucide-react';
 
 const ChartOfAccounts: React.FC = () => {
+  const { toast } = useToast();
+  const [isNewAccountDialogOpen, setIsNewAccountDialogOpen] = useState(false);
+  
   // Mock data
-  const accounts = [
+  const [accounts, setAccounts] = useState([
     { id: 1, code: '1000', name: 'Cash', type: 'Asset', balance: 45000, active: true },
     { id: 2, code: '1100', name: 'Accounts Receivable', type: 'Asset', balance: 35000, active: true },
     { id: 3, code: '1200', name: 'Inventory', type: 'Asset', balance: 22000, active: true },
@@ -27,7 +33,7 @@ const ChartOfAccounts: React.FC = () => {
     { id: 10, code: '5000', name: 'Cost of Goods Sold', type: 'Expense', balance: 62500, active: true },
     { id: 11, code: '6000', name: 'Office Supplies', type: 'Expense', balance: 3500, active: true },
     { id: 12, code: '6100', name: 'Rent Expense', type: 'Expense', balance: 12000, active: true },
-  ];
+  ]);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -38,13 +44,36 @@ const ChartOfAccounts: React.FC = () => {
       maximumFractionDigits: 0,
     }).format(amount);
   };
+  
+  const handleNewAccountSubmit = (data: any) => {
+    const newAccount = {
+      id: accounts.length + 1,
+      code: data.code,
+      name: data.name,
+      type: data.type,
+      balance: parseFloat(data.balance),
+      active: data.active
+    };
+    
+    setAccounts([...accounts, newAccount]);
+    setIsNewAccountDialogOpen(false);
+    
+    toast({
+      title: "Account Created",
+      description: `${data.name} has been added to the chart of accounts.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-dac-foreground">Chart of Accounts</h2>
-        <Button variant="default" className="bg-dac-primary hover:bg-dac-secondary">
-          Add New Account
+        <Button 
+          variant="default" 
+          className="bg-dac-primary hover:bg-dac-secondary"
+          onClick={() => setIsNewAccountDialogOpen(true)}
+        >
+          <FileChart className="h-4 w-4 mr-2" /> Add New Account
         </Button>
       </div>
 
@@ -112,7 +141,7 @@ const ChartOfAccounts: React.FC = () => {
           </Table>
           <div className="flex items-center justify-between border-t border-dac-border px-4 py-2 bg-dac-background">
             <div className="text-sm text-dac-muted">
-              Showing <strong>12</strong> of <strong>12</strong> accounts
+              Showing <strong>{accounts.length}</strong> of <strong>{accounts.length}</strong> accounts
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" disabled>Previous</Button>
@@ -121,6 +150,12 @@ const ChartOfAccounts: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <NewAccountForm 
+        open={isNewAccountDialogOpen}
+        onOpenChange={setIsNewAccountDialogOpen}
+        onSubmit={handleNewAccountSubmit}
+      />
     </div>
   );
 };
