@@ -188,3 +188,19 @@ export const generateJournalLinesFromProforma = (
     };
   });
 };
+
+// Function to get proforma type for a specific transaction type
+export const getProformaTypeForTransaction = (transactionType: string): string => {
+  switch(transactionType) {
+    case 'Invoice':
+      return 'sales';
+    case 'Payment':
+      return 'payment';
+    case 'Expense':
+      return 'purchase';
+    case 'Transfer':
+      return 'vendor-payment';
+    default:
+      return '';
+  }
+};

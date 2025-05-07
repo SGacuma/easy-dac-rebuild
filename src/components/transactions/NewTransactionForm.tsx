@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { generateJournalLinesFromProforma } from '@/utils/proformaEntries';
+import { Save } from 'lucide-react';
 
 const transactionSchema = z.object({
   date: z.string().min(1, 'Date is required'),
@@ -50,6 +52,7 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
   const [activeTab, setActiveTab] = useState('invoice');
   const [showJournalPreview, setShowJournalPreview] = useState(false);
   const [journalPreview, setJournalPreview] = useState<Array<{account: string; description: string; debit: string; credit: string}>>([]);
+  const [isSaving, setIsSaving] = useState(false);
   
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -98,10 +101,17 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
     form.setValue('type', value.charAt(0).toUpperCase() + value.slice(1));
   };
 
-  const handleSubmit = (data: TransactionFormValues) => {
-    onSubmit(data);
-    form.reset();
-    setShowJournalPreview(false);
+  const handleSubmit = async (data: TransactionFormValues) => {
+    setIsSaving(true);
+    try {
+      await onSubmit(data);
+      form.reset();
+      setShowJournalPreview(false);
+    } catch (error) {
+      console.error("Error saving transaction:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -491,7 +501,10 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Save Transaction</Button>
+                <Button type="submit" disabled={isSaving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? 'Saving...' : 'Save Transaction'}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
