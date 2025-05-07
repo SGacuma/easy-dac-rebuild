@@ -109,6 +109,51 @@ export const proformaEntries: ProformaEntry[] = [
         percentage: 100,
       }
     ]
+  },
+  // Adding more specific transaction templates
+  {
+    id: 'sales-with-tax',
+    name: 'Sales with Tax',
+    description: 'Record a sale with sales tax',
+    lines: [
+      {
+        account: 'Accounts Receivable',
+        description: 'Customer invoice with tax',
+        isDebit: true,
+        percentage: 100,
+      },
+      {
+        account: 'Sales Revenue',
+        description: 'Sales revenue',
+        isDebit: false,
+        percentage: 91,  // Assuming 9% tax rate
+      },
+      {
+        account: 'Sales Tax Payable',
+        description: 'Sales tax collected',
+        isDebit: false,
+        percentage: 9,   // 9% tax
+      }
+    ]
+  },
+  {
+    id: 'expense-reimbursement',
+    name: 'Expense Reimbursement',
+    description: 'Record employee expense reimbursement',
+    lines: [
+      {
+        account: 'Travel Expenses',
+        description: 'Employee expenses',
+        isDebit: true,
+        percentage: 100,
+      },
+      {
+        account: 'Cash',
+        description: 'Reimbursement payment',
+        isDebit: false,
+        percentage: 100,
+      }
+    ]
   }
 ];
 

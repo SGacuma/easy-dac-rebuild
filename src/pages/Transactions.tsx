@@ -14,6 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewTransactionForm from '@/components/transactions/NewTransactionForm';
 import { FilePlus } from 'lucide-react';
+import { generateJournalLinesFromProforma } from '@/utils/proformaEntries';
 
 const Transactions: React.FC = () => {
   const { toast } = useToast();
@@ -77,6 +78,20 @@ const Transactions: React.FC = () => {
     },
   ]);
 
+  // Journal entries store
+  const [journalEntries, setJournalEntries] = useState<Array<{
+    id: number;
+    date: string;
+    reference: string;
+    description: string;
+    lines: Array<{
+      account: string;
+      description: string;
+      debit: number;
+      credit: number;
+    }>
+  }>>([]);
+
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -101,6 +116,7 @@ const Transactions: React.FC = () => {
   };
   
   const handleNewTransactionSubmit = (data: any) => {
+    // Create new transaction
     const newTransaction = {
       id: transactions.length + 1,
       date: data.date,
@@ -112,12 +128,62 @@ const Transactions: React.FC = () => {
     };
     
     setTransactions([newTransaction, ...transactions]);
-    setIsNewTransactionDialogOpen(false);
     
-    toast({
-      title: "Transaction Created",
-      description: `${data.type} ${data.reference} has been created successfully.`,
-    });
+    // Generate corresponding journal entry based on transaction type
+    let proformaType: string;
+    let description = "";
+    
+    switch(data.type) {
+      case 'Invoice':
+        proformaType = 'sales';
+        description = `Sales invoice ${data.reference} for ${data.customer}`;
+        break;
+      case 'Payment':
+        proformaType = 'payment';
+        description = `Payment received from ${data.customer}`;
+        break;
+      case 'Expense':
+        proformaType = 'purchase';
+        description = `Expense ${data.reference} for ${data.customer}`;
+        break;
+      case 'Transfer':
+        proformaType = 'vendor-payment';
+        description = `Transfer ${data.reference} to/from ${data.customer}`;
+        break;
+      default:
+        proformaType = '';
+    }
+    
+    if (proformaType) {
+      const journalLines = generateJournalLinesFromProforma(proformaType, Math.abs(parseFloat(data.amount)));
+      
+      const newJournalEntry = {
+        id: journalEntries.length + 1,
+        date: data.date,
+        reference: data.reference,
+        description: description,
+        lines: journalLines.map(line => ({
+          account: line.account,
+          description: line.description,
+          debit: line.debit ? parseFloat(line.debit) : 0,
+          credit: line.credit ? parseFloat(line.credit) : 0
+        }))
+      };
+      
+      setJournalEntries([newJournalEntry, ...journalEntries]);
+      
+      toast({
+        title: "Transaction Created",
+        description: `${data.type} ${data.reference} has been created with corresponding journal entries.`,
+      });
+    } else {
+      toast({
+        title: "Transaction Created",
+        description: `${data.type} ${data.reference} has been created successfully.`,
+      });
+    }
+    
+    setIsNewTransactionDialogOpen(false);
   };
 
   return (

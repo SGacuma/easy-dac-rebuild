@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { generateJournalLinesFromProforma } from '@/utils/proformaEntries';
 
 const transactionSchema = z.object({
   date: z.string().min(1, 'Date is required'),
@@ -46,6 +47,10 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
   onOpenChange,
   onSubmit
 }) => {
+  const [activeTab, setActiveTab] = useState('invoice');
+  const [showJournalPreview, setShowJournalPreview] = useState(false);
+  const [journalPreview, setJournalPreview] = useState<Array<{account: string; description: string; debit: string; credit: string}>>([]);
+  
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -59,9 +64,44 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
     }
   });
 
+  // Update journal preview when amount changes
+  useEffect(() => {
+    const amount = form.watch('amount');
+    if (!amount) return;
+    
+    let proformaType = '';
+    
+    switch(activeTab) {
+      case 'invoice':
+        proformaType = 'sales';
+        break;
+      case 'payment':
+        proformaType = 'payment';
+        break;
+      case 'expense':
+        proformaType = 'purchase';
+        break;
+      case 'transfer':
+        proformaType = 'vendor-payment';
+        break;
+    }
+    
+    if (proformaType) {
+      const lines = generateJournalLinesFromProforma(proformaType, amount);
+      setJournalPreview(lines);
+    }
+  }, [form.watch('amount'), activeTab]);
+  
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Set the transaction type based on the tab
+    form.setValue('type', value.charAt(0).toUpperCase() + value.slice(1));
+  };
+
   const handleSubmit = (data: TransactionFormValues) => {
     onSubmit(data);
     form.reset();
+    setShowJournalPreview(false);
   };
 
   return (
@@ -71,7 +111,7 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
           <DialogTitle>New Transaction</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="invoice">
+        <Tabs defaultValue="invoice" onValueChange={handleTabChange}>
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="invoice">Invoice</TabsTrigger>
             <TabsTrigger value="payment">Payment</TabsTrigger>
@@ -404,6 +444,48 @@ const NewTransactionForm: React.FC<NewTransactionFormProps> = ({
 
                 <input type="hidden" {...form.register('type')} value="Transfer" />
               </TabsContent>
+              
+              {/* Journal Entry Preview */}
+              {form.watch('amount') > 0 && (
+                <div className="border rounded-md p-3 bg-slate-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium">Journal Entry Preview</h3>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowJournalPreview(!showJournalPreview)}
+                    >
+                      {showJournalPreview ? 'Hide' : 'Show'} Journal Entries
+                    </Button>
+                  </div>
+                  
+                  {showJournalPreview && journalPreview.length > 0 && (
+                    <div className="mt-2 overflow-x-auto">
+                      <table className="w-full border-collapse text-sm">
+                        <thead>
+                          <tr className="bg-slate-100">
+                            <th className="text-left py-1 px-2">Account</th>
+                            <th className="text-left py-1 px-2">Description</th>
+                            <th className="text-right py-1 px-2">Debit</th>
+                            <th className="text-right py-1 px-2">Credit</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {journalPreview.map((line, idx) => (
+                            <tr key={idx} className="border-t">
+                              <td className="py-1 px-2">{line.account}</td>
+                              <td className="py-1 px-2">{line.description}</td>
+                              <td className="py-1 px-2 text-right">{line.debit}</td>
+                              <td className="py-1 px-2 text-right">{line.credit}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
