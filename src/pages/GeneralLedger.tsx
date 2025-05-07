@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,11 +14,19 @@ import {
 import NewJournalEntryForm from '@/components/journal/NewJournalEntryForm';
 import { BookOpen } from 'lucide-react'; // Using BookOpen instead of Journal
 
+// Mock data store - in a real app, this would be managed by a state management solution
+const globalJournalEntries = [];
+
+// Function to add journal entries (will be called from Transactions.tsx)
+export const addJournalEntry = (entry) => {
+  globalJournalEntries.unshift(entry); // Add to the beginning of the array
+};
+
 const GeneralLedger: React.FC = () => {
   const { toast } = useToast();
   const [isJournalEntryDialogOpen, setIsJournalEntryDialogOpen] = useState(false);
   
-  // Mock data
+  // Initialize ledger entries with mock data plus any transaction journal entries
   const [ledgerEntries, setLedgerEntries] = useState([
     { 
       id: 1, 
@@ -75,6 +83,39 @@ const GeneralLedger: React.FC = () => {
       credit: 7500 
     },
   ]);
+
+  // Effect to process any journal entries added from transactions
+  useEffect(() => {
+    if (globalJournalEntries.length > 0) {
+      const newEntries = [];
+      let nextId = ledgerEntries.length + 1;
+      
+      globalJournalEntries.forEach(entry => {
+        entry.lines.forEach(line => {
+          newEntries.push({
+            id: nextId++,
+            date: entry.date,
+            reference: entry.reference,
+            account: line.account,
+            description: entry.description,
+            debit: line.debit || 0,
+            credit: line.credit || 0
+          });
+        });
+      });
+      
+      if (newEntries.length > 0) {
+        setLedgerEntries(prev => [...newEntries, ...prev]);
+        // Clear the global entries after processing
+        globalJournalEntries.length = 0;
+        
+        toast({
+          title: "General Ledger Updated",
+          description: `${newEntries.length} new journal entries have been added.`,
+        });
+      }
+    }
+  }, []);
 
   // Format currency
   const formatCurrency = (amount: number) => {

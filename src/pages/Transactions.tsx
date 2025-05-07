@@ -14,7 +14,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewTransactionForm from '@/components/transactions/NewTransactionForm';
 import { FilePlus } from 'lucide-react';
-import { generateJournalLinesFromProforma } from '@/utils/proformaEntries';
+import { generateJournalLinesFromProforma, getProformaTypeForTransaction } from '@/utils/proformaEntries';
+import { addJournalEntry } from './GeneralLedger';
 
 const Transactions: React.FC = () => {
   const { toast } = useToast();
@@ -134,28 +135,24 @@ const Transactions: React.FC = () => {
       setTransactions([newTransaction, ...transactions]);
       
       // Generate corresponding journal entry based on transaction type
-      let proformaType: string;
+      const proformaType = getProformaTypeForTransaction(data.type);
       let description = "";
       
       switch(data.type) {
         case 'Invoice':
-          proformaType = 'sales';
           description = `Sales invoice ${data.reference} for ${data.customer}`;
           break;
         case 'Payment':
-          proformaType = 'payment';
           description = `Payment received from ${data.customer}`;
           break;
         case 'Expense':
-          proformaType = 'purchase';
           description = `Expense ${data.reference} for ${data.customer}`;
           break;
         case 'Transfer':
-          proformaType = 'vendor-payment';
           description = `Transfer ${data.reference} to/from ${data.customer}`;
           break;
         default:
-          proformaType = '';
+          description = `Transaction ${data.reference}`;
       }
       
       if (proformaType) {
@@ -175,6 +172,9 @@ const Transactions: React.FC = () => {
         };
         
         setJournalEntries([newJournalEntry, ...journalEntries]);
+        
+        // Add journal entry to the global store for GeneralLedger
+        addJournalEntry(newJournalEntry);
         
         toast({
           title: "Transaction Created",
